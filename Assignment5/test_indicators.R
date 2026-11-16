@@ -1,0 +1,32 @@
+# Run from the project root: source("tests/test_indicators.R")
+source("R/sma.R")
+source("R/ema.R")
+source("R/macd.R")
+source("R/stdev.R")
+source("R/linreg.R")
+source("R/rsi.R")
+source("R/stoch_rsi.R")
+source("R/crossover.R")
+source("R/crossunder.R")
+
+# SMA expected rolling means: (10+12+15)/3, (12+15+20)/3, ...
+x <- c(10, 12, 15, 20, 18, 22, 25, 24, 21)
+stopifnot(isTRUE(all.equal(sma(x, 3), c(12.3333333333, 15.6666666667,
+                                         17.6666666667, 20, 21.6666666667,
+                                         23.6666666667, 23.3333333333), tolerance=1e-8)))
+stopifnot(isTRUE(all.equal(ema(c(10, 12, 15), 3), c(10, 11, 13), tolerance=1e-10)))
+stopifnot(isTRUE(all.equal(stdev(c(2, 4, 4, 4, 5, 5, 7, 9)), 2, tolerance=1e-10)))
+m <- macd(c(100, 105, 110, 115, 120, 125, 130), 3, 5, 2)
+stopifnot(length(m$macd_line) == 7, length(m$signal_line) == 7, length(m$histogram) == 7)
+lr <- linreg(c(2, 4, 6, 8, 10), 5, 0)
+stopifnot(isTRUE(all.equal(lr$slope, 2)), isTRUE(all.equal(lr$intercept, 0)))
+r <- rsi(c(45, 50, 48, 55, 52, 49, 58, 60, 65, 62), 5)
+stopifnot(length(r) == 10, all(is.na(r[1:5])), all(r[6:10] >= 0 & r[6:10] <= 100))
+sr <- stoch_rsi(c(45, 50, 48, 55, 52, 49, 58, 60, 65, 62, 64, 63, 66, 68), 5, 3, 3)
+stopifnot(is.list(sr), length(sr$k_line) > 0, length(sr$d_line) > 0)
+up <- crossover(c(1, 2, 4, 3), c(2, 2, 3, 3))
+stopifnot(identical(up, c("None", "None", "Up", "None")))
+down <- crossunder(c(3, 2, 1), c(2, 2, 2))
+stopifnot(identical(down, c("False", "False", "True")))
+
+cat("All indicator tests passed.\\n")
